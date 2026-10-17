@@ -1,0 +1,7 @@
+../src/access.js
+src/vendor/github.js
+src/dispatch-lead.js
+src/vendor/observer-edition.js
+src/build.js
+src/page.js
+src/index.js

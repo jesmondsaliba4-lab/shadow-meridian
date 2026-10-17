@@ -1,0 +1,8 @@
+../src/access.js
+src/vendor/expanded-news.js
+src/vendor/verified-updates.js
+src/meridian-api.js
+../observer-feed/src/index.js
+src/compare.js
+src/compare-page.js
+src/index.js
