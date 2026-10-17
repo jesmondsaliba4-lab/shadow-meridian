@@ -1,3 +1,5 @@
+import { deskTabs, TAB_STYLE } from "./watch/page.js";
+
 var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 var fmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Malta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 var when = (iso) => {
@@ -59,7 +61,8 @@ function renderDesk({ candidate, published, viewer, message }) {
 :root{--navy:#0a1226;--gold:#c89244;--paper:#f6f1e6;--ink:#1d2433;--muted:#5b6272;--line:#ddd3bf;--card:#fffdf8;--ok:#2f6b3a;--bad:#9b2c2c}
 @media (prefers-color-scheme:dark){:root{--paper:#0d1424;--ink:#ebe5d8;--muted:#a3a9b7;--line:#2a3550;--card:#131c31;--ok:#7ccf8a;--bad:#f08a8a}}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:var(--navy);color:#efe7d4;padding:16px;border-bottom:3px solid var(--gold)}header h1{margin:0;font-size:20px}header p{margin:4px 0 0;color:#c9c2b2;font-size:13px}
+header{background:var(--navy);color:#efe7d4;padding:16px 16px 0;border-bottom:3px solid var(--gold)}header h1{margin:0;font-size:20px}header p{margin:4px 0 0;color:#c9c2b2;font-size:13px}
+${TAB_STYLE}
 main{max-width:1200px;margin:0 auto;padding:16px}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
@@ -73,7 +76,7 @@ button{font:inherit;font-weight:700;padding:10px 18px;border-radius:8px;border:0
 .msg{padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);margin:0 0 16px}
 a{color:var(--gold)}
 </style></head><body>
-<header><h1>Publish to Observer</h1><p>Malta Observer publication desk \xB7 signed in as ${esc(viewer)} \xB7 nothing reaches maltaobserver.com until you press Publish</p></header>
+<header><h1>Publish to Observer</h1><p>Malta Observer publication desk \xB7 signed in as ${esc(viewer)} \xB7 nothing reaches maltaobserver.com until you press Publish</p>${deskTabs("observer")}</header>
 <main>
 ${message ? `<p class="msg">${esc(message)}</p>` : ""}
 <div class="bar">

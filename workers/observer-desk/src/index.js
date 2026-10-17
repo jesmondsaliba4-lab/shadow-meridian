@@ -1,6 +1,8 @@
 import { verifyAccess } from "./access.js";
 import { approve, buildCandidate, latestCandidate, publishedEdition, storeCandidate } from "./build.js";
 import { renderDesk } from "./page.js";
+import { handleWatch, WATCH_CRON } from "./watch/routes.js";
+import { prepareWatch } from "./watch/store.js";
 
 var SECURITY = {
   "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
@@ -62,6 +64,8 @@ async function handleRequest(request, env, deps = {}) {
   const url = new URL(request.url);
   const access = await verifyAccess(request, env, deps);
   if (!access.ok) return text(access.status, `Not available (${access.reason}). Sign in through tpnintel.com with a reader account.`);
+  const watch = await handleWatch(request, env, { url, access, html, text, sameSite, security: SECURITY, deps });
+  if (watch) return watch;
   const db = env.EVIDENCE_DB;
   if (request.method === "GET" && url.pathname === "/") {
     const [candidate2, published] = await Promise.all([latestCandidate(db), publishedEdition(db)]);
@@ -90,6 +94,13 @@ async function handleRequest(request, env, deps = {}) {
 var index_default = {
   fetch: (request, env) => handleRequest(request, env),
   async scheduled(controller, env, ctx) {
+    if (controller.cron === WATCH_CRON) {
+      ctx.waitUntil(prepareWatch(env, { nowMs: controller.scheduledTime }).then(
+        (r) => console.log(JSON.stringify({ event: "watch_candidate_prepared", ...r })),
+        (e) => console.error(JSON.stringify({ event: "watch_candidate_failed", message: e instanceof Error ? e.message : String(e) }))
+      ));
+      return;
+    }
     ctx.waitUntil(prepare(env, { nowMs: controller.scheduledTime }).then(
       (r) => console.log(JSON.stringify({ event: "observer_candidate_prepared", ...r })),
       (e) => console.error(JSON.stringify({ event: "observer_candidate_failed", message: e instanceof Error ? e.message : String(e) }))
@@ -100,6 +111,7 @@ export {
   index_default as default,
   failureCode,
   handleRequest,
-  prepare
+  prepare,
+  prepareWatch
 };
 
