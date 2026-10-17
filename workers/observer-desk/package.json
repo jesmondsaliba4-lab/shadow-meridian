@@ -1,0 +1,12 @@
+{
+  "name": "observer-desk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bundle": "esbuild src/index.js --bundle --format=esm --keep-names --external:node:* --platform=neutral --log-level=warning --outfile=dist/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.2"
+  }
+}
