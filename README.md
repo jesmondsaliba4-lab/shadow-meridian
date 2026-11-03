@@ -9,6 +9,7 @@ Source for the TPN Observer Cloudflare Workers, recovered on 17 October 2026 fro
 | `workers/observer-desk` | `observer-desk` | publish.tpnintel.com: prepares the Malta Observer candidate on a schedule (`observer_editions`, `observer_candidates`), shows the desk page and records Jes's approval (`observer_approvals`) |
 | `workers/meridian-shadow` | `meridian-shadow` | Meridian comparison copy; it also bundles the observer-feed source (`../observer-feed/src/index.js`) |
 | `workers/tpn-evidence-shadow` | `tpn-evidence-shadow` | The evidence engine collector (cron + queue) that fills the D1 database |
+| `workers/tpn-news-search` | `tpn-news-search` (new, not yet deployed) | Read-only news search over the evidence engine for cde.news Enquire; separate from Meridian, key-protected |
 
 Each folder holds `deployed-bundle.js`, exactly as Cloudflare runs it today, and `MODULES.txt`, which lists the original source modules inside the bundle (each starts with a `// src/...` comment).
 

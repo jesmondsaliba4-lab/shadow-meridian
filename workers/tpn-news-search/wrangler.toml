@@ -1,0 +1,14 @@
+# tpn-news-search — read-only news search for cde.news Enquire.
+# Before deploying, put the real database_id of `tpn-evidence` below
+# (Cloudflare dashboard › Storage & Databases › D1 › tpn-evidence).
+name = "tpn-news-search"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "EVIDENCE_DB"
+database_name = "tpn-evidence"
+database_id = "REPLACE-WITH-THE-TPN-EVIDENCE-DATABASE-ID"
+
+# Secret (never in this file): wrangler secret put NEWS_SEARCH_KEY
