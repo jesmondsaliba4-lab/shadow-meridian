@@ -442,6 +442,73 @@ function applyVerifiedUpdates(dataset) {
 }
 __name(applyVerifiedUpdates, "applyVerifiedUpdates");
 
+// src/vendor/election-feed.js
+// Election dates and results are kept on cde.news (Election Watch) and checked weekly.
+// The live briefing overlays them here, so Meridian and cde.news always agree.
+var ELECTION_FEED = "https://cde.news/wp-json/cdn/v1/elections";
+async function loadElectionFeed(fetchImpl = fetch) {
+  try {
+    const res = await fetchImpl(ELECTION_FEED, {
+      headers: { accept: "application/json" },
+      cf: { cacheTtl: 900, cacheEverything: true },
+      signal: AbortSignal.timeout(4000)
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return Array.isArray(body?.elections) ? body : null;
+  } catch {
+    return null;
+  }
+}
+__name(loadElectionFeed, "loadElectionFeed");
+function applyElectionFeed(dataset, feed) {
+  if (!feed?.elections?.length) return dataset;
+  const result = structuredClone(dataset);
+  const today = feed.today || new Date().toISOString().slice(0, 10);
+  const byCountry = new Map();
+  for (const e of feed.elections) {
+    const k = String(e.country || "").toLowerCase();
+    if (!k || !e.date) continue;
+    if (!byCountry.has(k)) byCountry.set(k, []);
+    byCountry.get(k).push(e);
+  }
+  const sources = (e) => (Array.isArray(e.sources) ? e.sources : []).filter((s) => s && s.url).map((s) => ({ name: s.name || s.url, url: s.url }));
+  for (const entity of result.entities || []) {
+    const rows = byCountry.get(String(entity.display_name || "").toLowerCase());
+    if (!rows || !entity.election) continue;
+    const election = entity.election;
+    const held = rows.filter((e) => e.status === "result").sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (held && held.date >= String(election.last_election?.date || "").slice(0, 10)) {
+      if (election.last_election && election.last_election.date !== held.date) election.previous_last_election ??= election.last_election;
+      election.last_election = {
+        date: held.date,
+        type: held.type,
+        headline: held.headline,
+        summary: held.summary,
+        sources: sources(held),
+        verified_at: held.checked || null,
+        verification_method: "cde.news Election Watch (weekly check)"
+      };
+    }
+    const next = rows.filter((e) => e.status !== "result" && (!held || e.date >= held.date)).sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (next) {
+      election.next_election = {
+        date: next.date_fixed ? next.date : next.date_label,
+        type: next.type,
+        summary: next.summary,
+        sources: sources(next),
+        verified_at: next.checked || null,
+        verification_method: "cde.news Election Watch (weekly check)",
+        status: next.status === "upcoming" ? "scheduled" : next.status
+      };
+    } else if (held && election.next_election && /^\d{4}-\d{2}-\d{2}/.test(election.next_election.date || "") && election.next_election.date.slice(0, 10) <= held.date) {
+      delete election.next_election;
+    }
+  }
+  return result;
+}
+__name(applyElectionFeed, "applyElectionFeed");
+
 // src/meridian-api.js
 var PROVIDER = "TPN evidence engine (trial copy)";
 var WINDOW_HOURS = 24;
@@ -511,7 +578,7 @@ __name(engineState, "engineState");
 async function engineBriefing(env, { nowMs = Date.now() } = {}) {
   const object = await env.LIVE_BRIEFING.get("data.json");
   if (!object) return { error: "dataset_unavailable" };
-  const dataset = applyVerifiedUpdates(await object.json());
+  const dataset = applyElectionFeed(applyVerifiedUpdates(await object.json()), await loadElectionFeed());
   const run = await latestRun(env.EVIDENCE_DB);
   const state = engineState(run, nowMs);
   if (!run?.completed_at) {

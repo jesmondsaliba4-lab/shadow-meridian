@@ -6,3 +6,4 @@ src/meridian-api.js
 src/compare.js
 src/compare-page.js
 src/index.js
+src/vendor/election-feed.js (inlined in deployed-bundle.js: overlays election dates/results from https://cde.news/wp-json/cdn/v1/elections)
